@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -20,6 +20,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import TableSortLabel from "@mui/material/TableSortLabel";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { orderApi, productApi } from "@/lib/api";
@@ -27,7 +28,14 @@ import { getApiErrorMessage } from "@/lib/error";
 import type { Order, Product } from "@/types/api.types";
 
 const emptyForm = { productId: "", quantity: "", status: "PENDING" };
-const statusOptions = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
+const statusOptions = [
+  "PENDING",
+  "CONFIRMED",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+];
+type OrderSortKey = "id" | "productId" | "quantity" | "status" | "totalPrice";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -38,7 +46,12 @@ export default function OrdersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Order | null>(null);
   const [form, setForm] = useState(emptyForm);
-  const [fieldErrors, setFieldErrors] = useState<{ productId?: string; quantity?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{
+    productId?: string;
+    quantity?: string;
+  }>({});
+  const [sortBy, setSortBy] = useState<OrderSortKey>("id");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const loadOrders = async () => {
     try {
@@ -139,6 +152,42 @@ export default function OrdersPage() {
     }
   };
 
+  const handleSort = (key: OrderSortKey) => {
+    setSortDirection((prev) =>
+      sortBy === key ? (prev === "asc" ? "desc" : "asc") : "asc",
+    );
+    setSortBy(key);
+  };
+
+  const sortedOrders = useMemo(() => {
+    const data = [...orders];
+    const direction = sortDirection === "asc" ? 1 : -1;
+    const getValue = (order: Order) => {
+      switch (sortBy) {
+        case "id":
+          return order.id;
+        case "productId":
+          return order.productId;
+        case "quantity":
+          return order.quantity;
+        case "status":
+          return order.status;
+        case "totalPrice":
+          return order.totalPrice;
+        default:
+          return order.id;
+      }
+    };
+    return data.sort((a, b) => {
+      const aVal = getValue(a);
+      const bVal = getValue(b);
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return (aVal - bVal) * direction;
+      }
+      return String(aVal).localeCompare(String(bVal)) * direction;
+    });
+  }, [orders, sortBy, sortDirection]);
+
   return (
     <Box>
       <Stack
@@ -169,16 +218,74 @@ export default function OrdersPage() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Order ID</TableCell>
-                  <TableCell>Product ID</TableCell>
-                  <TableCell>Quantity</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Total</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell
+                    sortDirection={sortBy === "id" ? sortDirection : false}
+                  >
+                    <TableSortLabel
+                      active={sortBy === "id"}
+                      direction={sortBy === "id" ? sortDirection : "asc"}
+                      onClick={() => handleSort("id")}
+                    >
+                      Order ID
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell
+                    sortDirection={
+                      sortBy === "productId" ? sortDirection : false
+                    }
+                  >
+                    <TableSortLabel
+                      active={sortBy === "productId"}
+                      direction={sortBy === "productId" ? sortDirection : "asc"}
+                      onClick={() => handleSort("productId")}
+                    >
+                      Product ID
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell
+                    sortDirection={
+                      sortBy === "quantity" ? sortDirection : false
+                    }
+                  >
+                    <TableSortLabel
+                      active={sortBy === "quantity"}
+                      direction={sortBy === "quantity" ? sortDirection : "asc"}
+                      onClick={() => handleSort("quantity")}
+                    >
+                      Quantity
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell
+                    sortDirection={sortBy === "status" ? sortDirection : false}
+                  >
+                    <TableSortLabel
+                      active={sortBy === "status"}
+                      direction={sortBy === "status" ? sortDirection : "asc"}
+                      onClick={() => handleSort("status")}
+                    >
+                      Status
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell
+                    sortDirection={
+                      sortBy === "totalPrice" ? sortDirection : false
+                    }
+                  >
+                    <TableSortLabel
+                      active={sortBy === "totalPrice"}
+                      direction={
+                        sortBy === "totalPrice" ? sortDirection : "asc"
+                      }
+                      onClick={() => handleSort("totalPrice")}
+                    >
+                      Total
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {orders.map((order) => (
+                {sortedOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>{order.id}</TableCell>
                     <TableCell>{order.productId}</TableCell>
@@ -188,7 +295,7 @@ export default function OrdersPage() {
                     <TableCell align="right">
                       <Stack
                         direction="row"
-                        spacing={1}
+                        // spacing={1}
                         justifyContent="flex-end"
                       >
                         <Button size="small" onClick={() => openEdit(order)}>
@@ -227,12 +334,16 @@ export default function OrdersPage() {
                 label="Product"
                 value={form.productId}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, productId: String(e.target.value) }))
+                  setForm((prev) => ({
+                    ...prev,
+                    productId: String(e.target.value),
+                  }))
                 }
               >
                 {products.map((product) => (
                   <MenuItem key={product.id} value={product.id}>
-                    {product.name} — ${product.price.toFixed(2)} (stock {product.stock})
+                    {product.name} — ${product.price.toFixed(2)} (stock{" "}
+                    {product.stock})
                   </MenuItem>
                 ))}
               </Select>
@@ -264,7 +375,10 @@ export default function OrdersPage() {
                 label="Status"
                 value={form.status}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, status: String(e.target.value) }))
+                  setForm((prev) => ({
+                    ...prev,
+                    status: String(e.target.value),
+                  }))
                 }
               >
                 {statusOptions.map((status) => (
@@ -273,7 +387,9 @@ export default function OrdersPage() {
                   </MenuItem>
                 ))}
               </Select>
-              <FormHelperText>Update the order lifecycle status.</FormHelperText>
+              <FormHelperText>
+                Update the order lifecycle status.
+              </FormHelperText>
             </FormControl>
           </Stack>
         </DialogContent>
