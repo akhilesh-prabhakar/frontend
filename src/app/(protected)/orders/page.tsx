@@ -292,12 +292,8 @@ export default function OrdersPage() {
                     <TableCell>{order.quantity}</TableCell>
                     <TableCell>{order.status}</TableCell>
                     <TableCell>${order.totalPrice.toFixed(2)}</TableCell>
-                    <TableCell align="right">
-                      <Stack
-                        direction="row"
-                        // spacing={1}
-                        justifyContent="flex-end"
-                      >
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={1} justifyContent="center">
                         <Button size="small" onClick={() => openEdit(order)}>
                           Edit
                         </Button>

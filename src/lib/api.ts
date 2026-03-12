@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import type { AuthResponse, Order, Product } from "@/types/api.types";
+import type { AuthResponse, Order, Product, UserProfile } from "@/types/api.types";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api",
@@ -24,6 +24,14 @@ export const authApi = {
   },
   login: async (payload: { email: string; password: string }) => {
     const { data } = await api.post<AuthResponse>("/auth/login", payload);
+    return data;
+  },
+  profile: async () => {
+    const { data } = await api.get<UserProfile>("/auth/profile");
+    return data;
+  },
+  updateProfile: async (payload: { name?: string; email?: string; password?: string }) => {
+    const { data } = await api.put<AuthResponse>("/auth/profile", payload);
     return data;
   },
 };

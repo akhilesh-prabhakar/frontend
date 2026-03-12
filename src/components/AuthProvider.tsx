@@ -16,6 +16,7 @@ type AuthContextValue = {
   isLoading: boolean;
   signup: (payload: { name: string; email: string; password: string }) => Promise<void>;
   login: (payload: { email: string; password: string }) => Promise<void>;
+  updateUser: (payload: AuthUser, token?: string) => void;
   logout: () => void;
 };
 
@@ -67,6 +68,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser({ userId: response.userId, name: response.name, email: response.email });
   }, []);
 
+  const updateUser = useCallback((nextUser: AuthUser, nextToken?: string) => {
+    setUser(nextUser);
+    localStorage.setItem("auth_user", JSON.stringify(nextUser));
+    if (nextToken) {
+      setToken(nextToken);
+      localStorage.setItem("auth_token", nextToken);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     clearAuth();
     setToken(null);
@@ -74,8 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, token, isLoading, signup, login, logout }),
-    [user, token, isLoading, signup, login, logout],
+    () => ({ user, token, isLoading, signup, login, updateUser, logout }),
+    [user, token, isLoading, signup, login, updateUser, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

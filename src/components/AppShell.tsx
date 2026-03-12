@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -17,6 +20,8 @@ import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -38,10 +43,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
 
   const handleLogout = () => {
     logout();
     router.replace("/login");
+  };
+
+  const handleProfileOpen = (event: MouseEvent<HTMLElement>) => {
+    setProfileAnchor(event.currentTarget);
+  };
+
+  const handleProfileClose = () => {
+    setProfileAnchor(null);
   };
 
   const activeDrawerWidth = sidebarOpen ? drawerWidth : drawerCollapsed;
@@ -75,6 +89,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               height: 32,
               borderRadius: 2,
               bgcolor: "primary.main",
+              backgroundImage:
+                "linear-gradient(135deg, rgba(20, 184, 166, 0.95), rgba(56, 189, 248, 0.85))",
               color: "#fff",
               display: "grid",
               placeItems: "center",
@@ -82,7 +98,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               flexShrink: 0,
             }}
           >
-            CH
+            OA
           </Box>
           {sidebarOpen ? (
             <Typography
@@ -90,7 +106,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               fontWeight={700}
               sx={{ whiteSpace: "nowrap" }}
             >
-              Control Hub
+              Ops Atlas
             </Typography>
           ) : (
             <Box sx={{ textAlign: "center" }}>
@@ -99,14 +115,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 fontWeight={700}
                 sx={{ lineHeight: 1.1 }}
               >
-                Control
+                Ops
               </Typography>
               <Typography
                 variant="caption"
                 fontWeight={700}
                 sx={{ lineHeight: 1.1 }}
               >
-                Hub
+                Atlas
               </Typography>
             </Box>
           )}
@@ -168,9 +184,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </Button>
         ) : (
           <Tooltip title="Logout" placement="right">
-            <Button variant="outlined" fullWidth onClick={handleLogout}>
-              Logout
-            </Button>
+            <IconButton
+              onClick={handleLogout}
+              sx={{
+                width: "100%",
+                borderRadius: 2,
+                border: "1px solid rgba(148, 163, 184, 0.5)",
+              }}
+            >
+              <LogoutOutlinedIcon />
+            </IconButton>
           </Tooltip>
         )}
       </Box>
@@ -190,32 +213,103 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
           background:
-            "linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94))",
-          boxShadow: "0 18px 40px rgba(15, 23, 42, 0.18)",
-          backdropFilter: "blur(12px)",
+            "linear-gradient(135deg, rgba(12, 18, 32, 0.98), rgba(30, 41, 59, 0.94))",
+          boxShadow: "0 22px 50px rgba(15, 23, 42, 0.25)",
+          backdropFilter: "blur(14px)",
+          borderBottom: "1px solid rgba(148, 163, 184, 0.2)",
         }}
       >
         <Toolbar
-          sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 2,
+            px: { xs: 1, sm: 2 },
+            minHeight: { xs: 64, sm: 68 },
+          }}
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ ml: -0.5 }}>
             <IconButton
+              edge="start"
               color="inherit"
               onClick={() => setMobileOpen(true)}
-              sx={{ display: { xs: "inline-flex", md: "none" } }}
+              sx={{
+                display: { xs: "inline-flex", md: "none" },
+                borderRadius: 2,
+                border: "1px solid rgba(255,255,255,0.15)",
+              }}
             >
               <MenuIcon />
             </IconButton>
             <IconButton
+              edge="start"
               color="inherit"
               onClick={() => setSidebarOpen((prev) => !prev)}
-              sx={{ display: { xs: "none", md: "inline-flex" } }}
+              sx={{
+                display: { xs: "none", md: "inline-flex" },
+                borderRadius: 2,
+                border: "1px solid rgba(255,255,255,0.15)",
+              }}
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" fontWeight={700}>
-              Control Hub
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Box
+                sx={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 2,
+                  bgcolor: "primary.main",
+                  backgroundImage:
+                    "linear-gradient(135deg, rgba(20, 184, 166, 0.95), rgba(56, 189, 248, 0.85))",
+                  color: "#fff",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                }}
+              >
+                OA
+              </Box>
+              <Stack spacing={0.2}>
+                <Typography variant="h6" fontWeight={700}>
+                  Ops Atlas
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "rgba(226,232,240,0.7)", letterSpacing: "0.08em" }}
+                >
+                  REALTIME COMMAND
+                </Typography>
+              </Stack>
+            </Stack>
+            <Box
+              sx={{
+                display: { xs: "none", md: "inline-flex" },
+                alignItems: "center",
+                gap: 1,
+                ml: 1,
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.2)",
+                bgcolor: "rgba(20, 184, 166, 0.18)",
+                color: "#e2e8f0",
+                fontSize: "0.7rem",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  bgcolor: "#22c55e",
+                  boxShadow: "0 0 8px rgba(34, 197, 94, 0.8)",
+                }}
+              />
+              LIVE SYSTEMS
+            </Box>
           </Stack>
           <Stack
             direction="row"
@@ -241,21 +335,52 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             >
               {user?.name ?? "User"}
             </Typography>
-            <Button
+            <IconButton
               color="inherit"
-              onClick={handleLogout}
+              onClick={handleProfileOpen}
               sx={{
-                borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.25)",
-                px: 2,
-                "&:hover": { bgcolor: "rgba(255,255,255,0.12)" },
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.2)",
+                bgcolor: "rgba(255,255,255,0.06)",
+                "&:hover": { bgcolor: "rgba(255,255,255,0.14)" },
               }}
             >
-              Logout
-            </Button>
+              <AccountCircleOutlinedIcon />
+            </IconButton>
           </Stack>
         </Toolbar>
       </AppBar>
+
+      <Menu
+        anchorEl={profileAnchor}
+        open={Boolean(profileAnchor)}
+        onClose={handleProfileClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MenuItem
+          onClick={() => {
+            handleProfileClose();
+            router.push("/profile");
+          }}
+        >
+          <ListItemIcon>
+            <PersonOutlineOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>View Profile</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleProfileClose();
+            handleLogout();
+          }}
+        >
+          <ListItemIcon>
+            <LogoutOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Logout</ListItemText>
+        </MenuItem>
+      </Menu>
 
       <Drawer
         variant="temporary"

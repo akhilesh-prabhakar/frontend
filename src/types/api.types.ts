@@ -5,6 +5,14 @@ export type AuthResponse = {
   token: string;
 };
 
+export type UserProfile = {
+  userId: string;
+  name: string;
+  email: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type Product = {
   id: string;
   name: string;
